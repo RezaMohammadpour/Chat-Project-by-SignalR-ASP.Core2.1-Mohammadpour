@@ -1,0 +1,66 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/signalr.js"></script>
+</head>
+<body class="center-block">
+    <div class="container col-md-6">
+        <div class="alert alert-success" id="divalert">
+        </div>
+        <input id="txtusername" class="form-control" />
+        <button id="btnstart" class="btn btn-primary">Start Chat</button>
+        <hr />
+        <select class="form-control" id="selOnlineUsers"></select>
+        <input id="txtmessage" class="form-control" />
+        <button id="btnsend" class="btn btn-success">Send</button>
+        <div class="container" id="div1"></div>
+    </div>
+    <label>Developed by Reza.Mohammadpour@@gmail.com</label>
+    <script>
+        $(function () {
+            var connection =
+                new signalR.HubConnectionBuilder().withUrl('/mohmmadpourChatRoomHub').build();
+
+            connection.on("F2", function (username, message) {
+                $(div1).append(`<b>${username} :</b> ${message}<br/>`)
+            })
+            connection.on("RefreshUserList", function (users) {
+                var html = "<option value=''>ALL</option>";
+                $(users).each(function (idx, user) {
+                    html += `<option value='${user}'>${user}</option>`
+                })
+
+                $(selOnlineUsers).html(html);
+            })
+
+            connection.on("NewUserRegister", function (user) {
+                $(divalert).html(`${user}, Added to group`)
+            })
+
+
+            $(btnstart).click(function () {
+
+                connection.start().then(function () {
+                    connection.invoke("RegisterUser", $(txtusername).val())
+                    //alert('connected to SignalR Server');
+                }).catch(function (error) { alert(`Error: ${error}`) })
+
+            })
+            $(btnsend).click(function () {
+                connection.invoke("F1", $(txtusername).val(), $(txtmessage).val(), $(selOnlineUsers).val())
+            })
+        })
+
+    </script>
+</body>
+</html>
